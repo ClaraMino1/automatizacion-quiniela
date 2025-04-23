@@ -1,16 +1,27 @@
 import os
 import shutil
 import time
+import shutil as sh
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from PIL import Image, ImageDraw, ImageFont
 
-def crear_driver_headless():
-    # Ruta al chromedriver y chromium instalados en Linux (Render)
-    chromedriver_path = "/usr/bin/chromedriver"
-    chromium_path = "/usr/bin/chromium"
 
+def crear_driver_headless():
+    # Intentar ubicar chromedriver y navegador Chromium en el sistema
+    chromedriver_path = sh.which("chromedriver") or "/usr/bin/chromedriver"
+    chromium_path = (sh.which("chromium-browser") or
+                     sh.which("chromium") or
+                     "/usr/bin/chromium-browser")
+
+    # Asegurarse de que existan los ejecutables
+    if not os.path.exists(chromedriver_path):
+        raise FileNotFoundError(f"chromedriver no encontrado en {chromedriver_path}")
+    if not os.path.exists(chromium_path):
+        raise FileNotFoundError(f"Chromium no encontrado en {chromium_path}")
+
+    # Opciones para Chrome headless
     options = webdriver.ChromeOptions()
     options.binary_location = chromium_path
     options.add_argument("--headless")
@@ -21,6 +32,7 @@ def crear_driver_headless():
 
     service = Service(executable_path=chromedriver_path)
     return webdriver.Chrome(service=service, options=options)
+
 
 def generar_resultados_horario(selected_horario=None):
     # 1. Iniciar driver usando la configuración headless adecuada
@@ -51,11 +63,10 @@ def generar_resultados_horario(selected_horario=None):
                     ).text.strip()
                     if prov in provincias_deseadas:
                         nums = bloque.find_elements(By.CLASS_NAME, 'c')
-                        # Cada nums[i] corresponde a la columna del horario
                         if idx < len(nums) and nums[idx].text.strip().isdigit():
                             datos_h[prov] = nums[idx].text.strip()
-                except:
-                    pass
+                except Exception:
+                    continue
             if datos_h:
                 resultados_por_horario_provincia[hora] = datos_h
     finally:
@@ -69,10 +80,7 @@ def generar_resultados_horario(selected_horario=None):
         "18:00": "VESPERTINA",
         "21:00": "NOCTURNA"
     }
-    formateados = {
-        mostrar[h]: d
-        for h, d in resultados_por_horario_provincia.items()
-    }
+    formateados = {mostrar[h]: d for h, d in resultados_por_horario_provincia.items()}
 
     # 4. Filtrar solo el elegido (si se pasó)
     if selected_horario:
@@ -113,6 +121,7 @@ def generar_resultados_horario(selected_horario=None):
         generados.append(salida)
 
     return generados
+
 
 if __name__ == '__main__':
     print(generar_resultados_horario())
