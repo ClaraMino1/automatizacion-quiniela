@@ -10,6 +10,7 @@ def generar_resultados_horario(selected_horario=None):
     # 1. Iniciar driver
     service = Service('./chromedriver.exe')
     options = webdriver.ChromeOptions()
+    options.binary_location = "/usr/bin/chromium"
     options.add_argument('--headless')
     options.add_argument('--disable-gpu')
     driver = webdriver.Chrome(service=service, options=options)

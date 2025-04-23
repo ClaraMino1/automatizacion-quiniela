@@ -19,6 +19,7 @@ def generar_resultados():
     # --- Inicializar Selenium en modo headless ---
     service = Service('./chromedriver.exe')
     options = webdriver.ChromeOptions()
+    options.binary_location = "/usr/bin/chromium"
     options.add_argument('--headless')
     options.add_argument('--window-size=1920,1080')
     driver = webdriver.Chrome(service=service, options=options)
