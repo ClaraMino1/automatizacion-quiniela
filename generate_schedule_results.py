@@ -1,7 +1,6 @@
 import os
 import shutil
 import time
-import shutil as sh
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -9,19 +8,33 @@ from PIL import Image, ImageDraw, ImageFont
 
 
 def crear_driver_headless():
-    # Intentar ubicar chromedriver y navegador Chromium en el sistema
-    chromedriver_path = sh.which("chromedriver") or "/usr/bin/chromedriver"
-    chromium_path = (sh.which("chromium-browser") or
-                     sh.which("chromium") or
-                     "/usr/bin/chromium-browser")
+    # Posibles ubicaciones de chromedriver instalado por Aptfile o en el PATH
+    candidates_driver = [
+        shutil.which("chromedriver"),
+        "/usr/bin/chromedriver",
+        "/usr/lib/chromium-browser/chromedriver",
+        "/usr/lib/chromium/chromedriver"
+    ]
+    chromedriver_path = next((p for p in candidates_driver if p and os.path.exists(p)), None)
 
-    # Asegurarse de que existan los ejecutables
-    if not os.path.exists(chromedriver_path):
-        raise FileNotFoundError(f"chromedriver no encontrado en {chromedriver_path}")
-    if not os.path.exists(chromium_path):
-        raise FileNotFoundError(f"Chromium no encontrado en {chromium_path}")
+    # Posibles ubicaciones de Chromium
+    candidates_chrome = [
+        shutil.which("chromium-browser"),
+        shutil.which("chromium"),
+        "/usr/bin/chromium-browser",
+        "/usr/bin/chromium"
+    ]
+    chromium_path = next((p for p in candidates_chrome if p and os.path.exists(p)), None)
 
-    # Opciones para Chrome headless
+    if not chromedriver_path:
+        raise FileNotFoundError(
+            f"chromedriver no encontrado. Busqué en: {', '.join(candidates_driver)}"
+        )
+    if not chromium_path:
+        raise FileNotFoundError(
+            f"Chromium no encontrado. Busqué en: {', '.join(candidates_chrome)}"
+        )
+
     options = webdriver.ChromeOptions()
     options.binary_location = chromium_path
     options.add_argument("--headless")
@@ -35,7 +48,7 @@ def crear_driver_headless():
 
 
 def generar_resultados_horario(selected_horario=None):
-    # 1. Iniciar driver usando la configuración headless adecuada
+    # 1. Iniciar driver usando configuración headless
     driver = crear_driver_headless()
 
     # 2. Scraping
@@ -72,7 +85,7 @@ def generar_resultados_horario(selected_horario=None):
     finally:
         driver.quit()
 
-    # 3. Mapear nombres
+    # 3. Mapear nombres de horario a título
     mostrar = {
         "10:15": "LA PREVIA",
         "12:00": "EL PRIMERO",
