@@ -6,14 +6,25 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from PIL import Image, ImageDraw, ImageFont
 
-def generar_resultados_horario(selected_horario=None):
-    # 1. Iniciar driver
-    service = Service('./chromedriver.exe')
+def crear_driver_headless():
+    # Ruta al chromedriver y chromium instalados en Linux (Render)
+    chromedriver_path = "/usr/bin/chromedriver"
+    chromium_path = "/usr/bin/chromium"
+
     options = webdriver.ChromeOptions()
-    options.binary_location = "/usr/bin/chromium"
-    options.add_argument('--headless')
-    options.add_argument('--disable-gpu')
-    driver = webdriver.Chrome(service=service, options=options)
+    options.binary_location = chromium_path
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
+    options.add_argument("--window-size=1920,1080")
+
+    service = Service(executable_path=chromedriver_path)
+    return webdriver.Chrome(service=service, options=options)
+
+def generar_resultados_horario(selected_horario=None):
+    # 1. Iniciar driver usando la configuración headless adecuada
+    driver = crear_driver_headless()
 
     # 2. Scraping
     driver.get('https://quesalio.com')
@@ -25,7 +36,7 @@ def generar_resultados_horario(selected_horario=None):
 
     try:
         fila = driver.find_element(By.XPATH, '//div[@class="x mar3"]')
-        elementos = fila.find_elements(By.CLASS_NAME, 'col.s2.m2.carobravo')
+        elementos = fila.find_elements(By.CLASS_NAME, 'carobravo')
         horarios = [h.text.strip() for h in elementos if h.text.strip() in horarios_esperados]
 
         bloques = driver.find_elements(
@@ -36,12 +47,13 @@ def generar_resultados_horario(selected_horario=None):
             for bloque in bloques:
                 try:
                     prov = bloque.find_element(
-                        By.XPATH, './/div[@class="col s2 m2 l2 kk9"]/h2'
+                        By.XPATH, './/div[contains(@class,"kk9")]/h2'
                     ).text.strip()
                     if prov in provincias_deseadas:
-                        nums = bloque.find_elements(By.CLASS_NAME, 'col.s2.m2')
-                        if len(nums) > idx+1 and nums[idx+1].text.strip():
-                            datos_h[prov] = nums[idx+1].text.strip()
+                        nums = bloque.find_elements(By.CLASS_NAME, 'c')
+                        # Cada nums[i] corresponde a la columna del horario
+                        if idx < len(nums) and nums[idx].text.strip().isdigit():
+                            datos_h[prov] = nums[idx].text.strip()
                 except:
                     pass
             if datos_h:
@@ -64,10 +76,7 @@ def generar_resultados_horario(selected_horario=None):
 
     # 4. Filtrar solo el elegido (si se pasó)
     if selected_horario:
-        formateados = {
-            k: v for k, v in formateados.items()
-            if k == selected_horario
-        }
+        formateados = {k: v for k, v in formateados.items() if k == selected_horario}
 
     # 5. Fuente y coordenadas
     try:
@@ -104,3 +113,6 @@ def generar_resultados_horario(selected_horario=None):
         generados.append(salida)
 
     return generados
+
+if __name__ == '__main__':
+    print(generar_resultados_horario())
