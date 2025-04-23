@@ -8,11 +8,11 @@ from PIL import Image, ImageDraw, ImageFont
 
 # --- Coords---
 coords = {
-    "Previa":    {"Ciudad": (250, 350),   "Provincia": (770, 350)},
-    "Primero":   {"Ciudad": (250, 600),   "Provincia": (770, 600)},
-    "Matutina":  {"Ciudad": (250, 850),   "Provincia": (770, 850)},
-    "Vespertina":{"Ciudad": (250, 1080),  "Provincia": (770, 1080)},
-    "Nocturna":  {"Ciudad": (250, 1300),  "Provincia": (770, 1300)}
+    "Previa":    {"Ciudad": (225, 336),   "Provincia": (736, 336)},
+    "Primero":   {"Ciudad": (225, 566),   "Provincia": (736, 566)},
+    "Matutina":  {"Ciudad": (225, 830),   "Provincia": (736, 830)},
+    "Vespertina":{"Ciudad": (225, 1065),  "Provincia": (736, 1065)},
+    "Nocturna":  {"Ciudad": (225, 1292),  "Provincia": (736, 1292)}
 }
 
 def generar_resultados():
@@ -69,7 +69,7 @@ def generar_resultados():
     img = Image.open("plantilla_canva.png")
     draw = ImageDraw.Draw(img)
     try:
-        font = ImageFont.truetype("arial.ttf", 30)
+        font = ImageFont.truetype("arial.ttf", 40)
     except IOError:
         font = ImageFont.load_default()
 
