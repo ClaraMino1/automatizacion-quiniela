@@ -4,60 +4,40 @@ import time
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
+from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image, ImageDraw, ImageFont
 
 
 def crear_driver_headless():
-    # Posibles ubicaciones de chromedriver instalado por Aptfile o en el PATH
-    candidates_driver = [
-        shutil.which("chromedriver"),
-        "/usr/bin/chromedriver",
-        "/usr/lib/chromium-browser/chromedriver",
-        "/usr/lib/chromium/chromedriver"
-    ]
-    chromedriver_path = next((p for p in candidates_driver if p and os.path.exists(p)), None)
-
-    # Posibles ubicaciones de Chromium
-    candidates_chrome = [
-        shutil.which("chromium-browser"),
-        shutil.which("chromium"),
-        "/usr/bin/chromium-browser",
-        "/usr/bin/chromium"
-    ]
-    chromium_path = next((p for p in candidates_chrome if p and os.path.exists(p)), None)
-
-    if not chromedriver_path:
-        raise FileNotFoundError(
-            f"chromedriver no encontrado. Busqué en: {', '.join(candidates_driver)}"
-        )
-    if not chromium_path:
-        raise FileNotFoundError(
-            f"Chromium no encontrado. Busqué en: {', '.join(candidates_chrome)}"
-        )
-
+    # Opciones para Chrome en modo headless
     options = webdriver.ChromeOptions()
-    options.binary_location = chromium_path
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
-    service = Service(executable_path=chromedriver_path)
+    # Si querés especificar un binario diferente (opcional):
+    chromium_path = os.getenv("CHROMIUM_PATH")
+    if chromium_path and os.path.exists(chromium_path):
+        options.binary_location = chromium_path
+
+    # Usamos webdriver_manager para obtener chromedriver adecuado
+    service = Service(ChromeDriverManager().install())
     return webdriver.Chrome(service=service, options=options)
 
 
 def generar_resultados_horario(selected_horario=None):
-    # 1. Iniciar driver usando configuración headless
+    # 1. Iniciar driver en modo headless
     driver = crear_driver_headless()
 
     # 2. Scraping
     driver.get('https://quesalio.com')
     time.sleep(5)
 
-    resultados_por_horario_provincia = {}
+    resultados = {}
     horarios_esperados = ["10:15", "12:00", "15:00", "18:00", "21:00"]
-    provincias_deseadas = ["Ciudad", "Provincia", "Santa Fe", "Córdoba", "Entre Ríos"]
+    provincias = ["Ciudad", "Provincia", "Santa Fe", "Córdoba", "Entre Ríos"]
 
     try:
         fila = driver.find_element(By.XPATH, '//div[@class="x mar3"]')
@@ -65,7 +45,8 @@ def generar_resultados_horario(selected_horario=None):
         horarios = [h.text.strip() for h in elementos if h.text.strip() in horarios_esperados]
 
         bloques = driver.find_elements(
-            By.XPATH, '//div[@class="col s12 agui"]/div[@class="col s12 sabatini"]'
+            By.XPATH,
+            '//div[@class="col s12 agui"]/div[@class="col s12 sabatini"]'
         )
         for idx, hora in enumerate(horarios):
             datos_h = {}
@@ -74,32 +55,34 @@ def generar_resultados_horario(selected_horario=None):
                     prov = bloque.find_element(
                         By.XPATH, './/div[contains(@class,"kk9")]/h2'
                     ).text.strip()
-                    if prov in provincias_deseadas:
-                        nums = bloque.find_elements(By.CLASS_NAME, 'c')
-                        if idx < len(nums) and nums[idx].text.strip().isdigit():
-                            datos_h[prov] = nums[idx].text.strip()
-                except Exception:
+                except:
                     continue
+                if prov in provincias:
+                    nums = bloque.find_elements(By.CLASS_NAME, 'c')
+                    if idx < len(nums):
+                        texto = nums[idx].text.strip()
+                        if texto.isdigit():
+                            datos_h[prov] = texto
             if datos_h:
-                resultados_por_horario_provincia[hora] = datos_h
+                resultados[hora] = datos_h
     finally:
         driver.quit()
 
-    # 3. Mapear nombres de horario a título
-    mostrar = {
+    # 3. Traducir horarios a títulos
+    mapping = {
         "10:15": "LA PREVIA",
         "12:00": "EL PRIMERO",
         "15:00": "MATUTINA",
         "18:00": "VESPERTINA",
         "21:00": "NOCTURNA"
     }
-    formateados = {mostrar[h]: d for h, d in resultados_por_horario_provincia.items()}
+    formateados = {mapping[h]: d for h, d in resultados.items()}
 
-    # 4. Filtrar solo el elegido (si se pasó)
+    # 4. Filtrar horario específico si se indicó
     if selected_horario:
         formateados = {k: v for k, v in formateados.items() if k == selected_horario}
 
-    # 5. Fuente y coordenadas
+    # 5. Carga de fuentes y coordenadas
     try:
         font = ImageFont.truetype("Pragmatica-Condensed-Bold.ttf", 100)
     except IOError:
@@ -126,7 +109,7 @@ def generar_resultados_horario(selected_horario=None):
         draw = ImageDraw.Draw(img)
         draw.text((292, 506), titulo, fill="white", font=font)
         for prov, num in datos.items():
-            x, y = coords[prov]
+            x, y = coords.get(prov, (0, 0))
             draw.text((x, y), num, fill="white", font=font)
 
         img.save(salida)
