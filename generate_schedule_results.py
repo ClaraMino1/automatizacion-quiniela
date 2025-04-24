@@ -17,14 +17,19 @@ def crear_driver_headless():
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
 
-    # Si querés especificar un binario diferente (opcional):
-    chromium_path = os.getenv("CHROMIUM_PATH")
-    if chromium_path and os.path.exists(chromium_path):
-        options.binary_location = chromium_path
-
-    # Usamos webdriver_manager para obtener chromedriver adecuado
+    # webdriver_manager para obtener chromedriver adecuado
     service = Service(ChromeDriverManager().install())
-    return webdriver.Chrome(service=service, options=options)
+    driver = webdriver.Chrome(service=service, options=options)
+
+    chromium_path = os.getenv("CHROMIUM_PATH")
+
+    if chromium_path and os.path.exists(chromium_path):
+        driver.options.binary_location = chromium_path
+        print(f"DEBUG: Forcing Chromium binary location to: {driver.options.binary_location}")
+
+    return driver
+
+    
 
 
 def generar_resultados_horario(selected_horario=None):
@@ -113,6 +118,7 @@ def generar_resultados_horario(selected_horario=None):
             draw.text((x, y), num, fill="white", font=font)
 
         img.save(salida)
+        os.makedirs("static", exist_ok=True)
         shutil.copy(salida, os.path.join("static", salida))
         generados.append(salida)
 

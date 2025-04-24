@@ -7,14 +7,15 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 from PIL import Image, ImageDraw, ImageFont
+import datetime
 
 # --- Coordenadas ---
 coords = {
     "Previa":     {"Ciudad": (225, 336),   "Provincia": (736, 336)},
-    "Primero":    {"Ciudad": (225, 566),   "Provincia": (736, 566)},
-    "Matutina":   {"Ciudad": (225, 830),   "Provincia": (736, 830)},
-    "Vespertina": {"Ciudad": (225, 1065),  "Provincia": (736, 1065)},
-    "Nocturna":   {"Ciudad": (225, 1292),  "Provincia": (736, 1292)}
+    "Primero":   {"Ciudad": (225, 566),   "Provincia": (736, 566)},
+    "Matutina":  {"Ciudad": (225, 830),   "Provincia": (736, 830)},
+    "Vespertina":{"Ciudad": (225, 1065),  "Provincia": (736, 1065)},
+    "Nocturna":  {"Ciudad": (225, 1292),  "Provincia": (736, 1292)}
 }
 
 def crear_driver():
@@ -76,6 +77,9 @@ def generar_resultados():
     print("DEBUG datos_numeros:", datos_numeros)
     driver.quit()
 
+    # --- Obtener la fecha actual ---
+    fecha_actual = datetime.date.today().strftime("%d/%m/%Y")
+
     # --- Preparar la plantilla de imagen ---
     img = Image.open("plantilla_canva.png")
     draw = ImageDraw.Draw(img)
@@ -87,6 +91,9 @@ def generar_resultados():
     for zona, (city_num, prov_num) in zip(zonas, datos_numeros):
         draw.text(coords[zona]["Ciudad"], city_num, fill="black", font=font)
         draw.text(coords[zona]["Provincia"], prov_num, fill="black", font=font)
+
+    # --- Dibujar la fecha ---
+    draw.text((465, 51), fecha_actual, fill="black", font=font)
 
     # --- Guardar en static/ para Flask ---
     output_name = "resultado_dia.png"
