@@ -1,18 +1,18 @@
-{% extends "base.html" %}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Resultado Generado</title>
+</head>
+<body>
+    <h1>Imagen Generada</h1>
+    
+    <img src="{{ url_for('static', filename=imagen) }}" alt="Resultado Quiniela">
 
-{% block content %}
-<div class="card p-4">
-    <h1 class="text-center mb-4">Resultado Generado</h1>
-    <div class="text-center mb-4">
-        
-        <img src="{{ url_for('static', filename=imagen) }}" alt="Resultado Quiniela">
+  
 
-    </div>
-    <div class="text-center">
-        <a href="{{ url_for('index') }}" class="btn btn-primary me-2">Generar Otro Resultado</a>
-        <a href="{{ url_for('descargar', filename=imagen) }}" class="btn btn-success">
-            <i class="bi bi-download"></i> Descargar Imagen
-        </a>
-    </div>
-</div>
-{% endblock %} 
+    <br>
+    <a href="{{ url_for('main.index') }}">Generar otro horario</a>
+
+</body>
+</html>

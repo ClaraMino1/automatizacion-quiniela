@@ -26,7 +26,7 @@ logger.info(f"TEMPLATES_DIR (ubicación de plantillas): {TEMPLATES_DIR}")
 
 # Directorio donde se guardarán las imágenes generadas.
 # Desde BASE_DIR (app/services), subimos dos niveles (../../) y luego entramos en 'static'
-STATIC_OUTPUT_DIR = os.path.normpath(os.path.join(BASE_DIR, '..', '..', 'static'))
+STATIC_OUTPUT_DIR = os.path.normpath(os.path.join(BASE_DIR, '..', 'static'))
 logger.info(f"STATIC_OUTPUT_DIR (ubicación de salida de imágenes): {STATIC_OUTPUT_DIR}")
 
 

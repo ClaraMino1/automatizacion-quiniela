@@ -1,13 +1,13 @@
+import os
+import logging
 from flask import Flask
 from flask_caching import Cache
-import logging
-import os
 from dotenv import load_dotenv
 
 # Cargar variables de entorno
 load_dotenv()
 
-# Crear directorio de logs si no existe
+# Crear directorio logs si no existe
 os.makedirs('logs', exist_ok=True)
 
 # Configuración de logging
@@ -21,19 +21,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-# Inicializar Flask
-app = Flask(__name__)
+cache = Cache()
 
-# Configuración de la aplicación
-app.config.update(
-    SECRET_KEY=os.getenv('SECRET_KEY', 'dev'),
-    CHROMIUM_PATH=os.getenv('CHROMIUM_PATH'),
-    CACHE_TYPE='simple',
-    CACHE_DEFAULT_TIMEOUT=300  # 5 minutos
-)
+def create_app():
+    app = Flask(__name__)
 
-# Inicializar caché
-cache = Cache(app)
+    app.config.update(
+        SECRET_KEY=os.getenv('SECRET_KEY', 'dev'),
+        CHROMIUM_PATH=os.getenv('CHROMIUM_PATH'),
+        CACHE_TYPE='simple',
+        CACHE_DEFAULT_TIMEOUT=300
+    )
 
-# Importar rutas después de crear la app para evitar importaciones circulares
-from app import routes
+    cache.init_app(app)
+
+    # Importar y registrar blueprint
+    from app.routes import bp as main_bp
+    app.register_blueprint(main_bp)
+
+    # Hacer accesible la caché vía app.cache (opcional)
+    app.cache = cache
+
+    return app
