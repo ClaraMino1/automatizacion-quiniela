@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Entornos virtuales
+venv/
+env/
+ENV/
+
+# Logs
+logs/
+*.log
+
+# Archivos de entorno
+.env
+.env.*
+
+# Archivos generados
+static/
+outputs/
+*.png
+
+# Chrome driver
+chromedriver.exe
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Sistema operativo
+.DS_Store
+Thumbs.db 
